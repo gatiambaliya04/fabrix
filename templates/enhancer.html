@@ -1,0 +1,234 @@
+{% extends 'base.html' %}
+
+{% block title %}Image Enhancer - AI-Powered Upscaling{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="card">
+    <div class="card-header">
+        <h2>🎨 Image Enhancement & Upscaling</h2>
+        <p style="color: #7f8c8d; margin-top: 10px;">
+            Upload your image and enhance it using Real-ESRGAN AI technology. 
+            Customize dimensions and PPI for perfect results.
+        </p>
+    </div>
+</div>
+
+<!-- Alert Box -->
+<div id="alertBox" class="alert"></div>
+
+<!-- Loading Spinner -->
+<div id="loadingSpinner" class="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Processing...</div>
+</div>
+
+<!-- Upload Section -->
+<div id="uploadSection" class="card">
+    <div class="card-header">
+        <h2>Upload Image</h2>
+    </div>
+    
+    <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Drag & Drop your image here</div>
+        <div class="upload-subtext">or click to browse</div>
+        <div class="upload-subtext" style="margin-top: 10px; font-size: 12px;">
+            Supported formats: PNG, JPG, BMP, TIFF, WEBP (Max 50MB)
+        </div>
+    </div>
+    
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/bmp,image/tiff,image/webp">
+    
+    <!-- Image Info -->
+    <div id="imageInfo" class="image-info"></div>
+</div>
+
+<!-- Controls Section -->
+<div id="controlsSection" class="card hidden">
+    <div class="card-header">
+        <h2>Enhancement Settings</h2>
+    </div>
+    
+    <form id="enhancementForm">
+        <!-- Unit Selection -->
+        <div class="form-group">
+            <label>Dimension Unit</label>
+            <div style="display: flex; gap: 20px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="dimensionUnit" value="pixels" checked>
+                    <span>Pixels</span>
+                </label>
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="radio" name="dimensionUnit" value="inches">
+                    <span>Inches</span>
+                </label>
+            </div>
+        </div>
+        
+        <!-- Dimensions -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="widthInput"><span id="widthLabel">Width (pixels)</span></label>
+                <input type="number" id="widthInput" min="0.01" step="any" placeholder="Enter width" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="heightInput"><span id="heightLabel">Height (pixels)</span></label>
+                <input type="number" id="heightInput" min="0.01" step="any" placeholder="Enter height" required>
+            </div>
+        </div>
+        
+        <!-- Maintain Aspect Ratio -->
+        <div class="form-group">
+            <div class="checkbox-group">
+                <input type="checkbox" id="maintainAspect" checked>
+                <label for="maintainAspect">Lock aspect ratio</label>
+            </div>
+        </div>
+        
+        <!-- PPI Settings -->
+        <div class="form-row">
+            <div class="form-group">
+                <label for="ppiHorizontal">
+                    Horizontal PPI (Pixels Per Inch)
+                    <span style="color: #7f8c8d; font-size: 14px; font-weight: normal;">
+                        - Controls horizontal pixel density
+                    </span>
+                </label>
+                <input type="number" id="ppiHorizontal" min="1" max="1200" value="72" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="ppiVertical">
+                    Vertical PPI (Pixels Per Inch)
+                    <span style="color: #7f8c8d; font-size: 14px; font-weight: normal;">
+                        - Controls vertical pixel density
+                    </span>
+                </label>
+                <input type="number" id="ppiVertical" min="1" max="1200" value="72" required>
+            </div>
+        </div>
+        
+        <!-- Output Format -->
+        <div class="form-group">
+            <label for="outputFormat">Output Format</label>
+            <select id="outputFormat">
+                <option value="png">PNG (Lossless)</option>
+                <option value="jpg">JPG (Compressed)</option>
+                <option value="jpeg">JPEG (Compressed)</option>
+                <option value="bmp">BMP (Uncompressed)</option>
+                <option value="tiff">TIFF (High Quality)</option>
+                <option value="webp">WebP (Modern)</option>
+            </select>
+        </div>
+        
+        <!-- Info Box -->
+        <div style="background: #e3f2fd; padding: 15px; border-radius: 6px; margin-top: 20px;">
+            <strong style="color: #1976d2;">💡 Pro Tip:</strong>
+            <p style="margin: 8px 0 0 0; color: #424242; font-size: 14px;">
+                Higher PPI values create more detailed images but larger file sizes. 
+                For web use, 72 PPI is standard. For print, use 300 PPI or higher.
+            </p>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons mt-3">
+            <button type="button" id="enhanceBtn" class="btn btn-primary">
+                ✨ Enhance Image
+            </button>
+            <button type="button" id="resetBtn" class="btn btn-secondary">
+                🔄 Reset
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Preview Section -->
+<div id="previewSection" class="card hidden">
+    <div class="card-header">
+        <h2>Preview Results</h2>
+        <p style="color: #7f8c8d; margin-top: 10px;">
+            Compare original and enhanced images side by side
+        </p>
+    </div>
+    
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+        <label>🔍 Zoom:</label>
+        <input type="range" id="zoomSlider" class="zoom-slider" min="100" max="500" value="100" step="10">
+        <span id="zoomValue" class="zoom-value">100%</span>
+    </div>
+    
+    <!-- Preview Images -->
+    <div class="preview-images">
+        <div class="preview-item">
+            <div class="preview-label">Original</div>
+            <img id="originalPreview" src="" alt="Original Image">
+        </div>
+        
+        <div class="preview-item">
+            <div class="preview-label">Enhanced</div>
+            <img id="enhancedPreview" src="" alt="Enhanced Image">
+        </div>
+    </div>
+    
+    <!-- Quality Check Info -->
+    <div style="background: #f0f7ff; padding: 15px; border-radius: 6px; margin-top: 20px;">
+        <strong style="color: #4a90e2;">📊 Quality Check:</strong>
+        <p style="margin: 8px 0 0 0; color: #424242; font-size: 14px;">
+            Zoom in to 500% to verify that the enhanced image maintains clarity without blur or pixelation.
+            The AI enhancement should preserve fine details and edges.
+        </p>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons mt-3">
+        <button type="button" id="downloadBtn" class="btn btn-success">
+            ⬇️ Download Enhanced Image
+        </button>
+        <button type="button" id="sendToOutlinerBtn" class="btn btn-primary">
+            ➡️ Send to Outliner
+        </button>
+        <button type="button" id="resetBtn" class="btn btn-secondary">
+            🔄 Start Over
+        </button>
+    </div>
+</div>
+
+<!-- Feature Highlights -->
+<div class="card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white;">
+    <h3 style="margin-bottom: 15px;">✨ Enhancement Features</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div>
+            <strong>🚀 AI-Powered Upscaling</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
+                Real-ESRGAN technology for superior image quality
+            </p>
+        </div>
+        <div>
+            <strong>🎯 Custom Dimensions</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
+                Precise control over width, height, and aspect ratio
+            </p>
+        </div>
+        <div>
+            <strong>📐 PPI Control</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
+                Independent horizontal and vertical pixel density
+            </p>
+        </div>
+        <div>
+            <strong>🔍 Quality Preview</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.9;">
+                Side-by-side comparison with zoom up to 500%
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/enhancer.js') }}"></script>
+{% endblock %}

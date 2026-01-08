@@ -1,0 +1,304 @@
+{% extends 'base.html' %}
+
+{% block title %}Outline Extractor - Precise Edge Detection{% endblock %}
+
+{% block content %}
+<!-- Page Header -->
+<div class="card">
+    <div class="card-header">
+        <h2>🖊️ Outline Extraction</h2>
+        <p style="color: #7f8c8d; margin-top: 10px;">
+            Extract clean, precise outlines from any image using advanced edge detection.
+            Perfect for creating coloring pages, design work, and line art.
+        </p>
+    </div>
+</div>
+
+<!-- Alert Box -->
+<div id="alertBox" class="alert"></div>
+
+<!-- Loading Spinner -->
+<div id="loadingSpinner" class="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Processing...</div>
+</div>
+
+<!-- Enhanced Image Option Section -->
+<div id="enhancedImageSection" class="card hidden">
+    <div class="card-header">
+        <h2>Use Enhanced Image</h2>
+    </div>
+    
+    <div style="background: #e3f2fd; padding: 25px; border-radius: 8px; text-align: center;">
+        <div style="font-size: 48px; margin-bottom: 15px;">✨</div>
+        <h3 style="color: #1976d2; margin-bottom: 15px;">Enhanced Image Available!</h3>
+        <p style="color: #424242; margin-bottom: 25px;">
+            You have an enhanced image from the Image Enhancer. 
+            Would you like to use it for outline extraction?
+        </p>
+        
+        <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
+            <button type="button" id="useEnhancedBtn" class="btn btn-primary">
+                ✅ Use Enhanced Image
+            </button>
+            <button type="button" id="uploadNewBtn" class="btn btn-secondary">
+                📁 Upload New Image
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Upload Section -->
+<div id="uploadSection" class="card hidden">
+    <div class="card-header">
+        <h2>Upload Image</h2>
+    </div>
+    
+    <div class="upload-area" id="uploadArea">
+        <div class="upload-icon">📁</div>
+        <div class="upload-text">Drag & Drop your image here</div>
+        <div class="upload-subtext">or click to browse</div>
+        <div class="upload-subtext" style="margin-top: 10px; font-size: 12px;">
+            Supported formats: PNG, JPG, BMP, TIFF, WEBP (Max 50MB)
+        </div>
+    </div>
+    
+    <input type="file" id="fileInput" accept="image/png,image/jpeg,image/jpg,image/bmp,image/tiff,image/webp">
+    
+    <!-- Image Info -->
+    <div id="imageInfo" class="image-info"></div>
+</div>
+
+<!-- Controls Section -->
+<div id="controlsSection" class="card hidden">
+    <div class="card-header">
+        <h2>Extraction Settings</h2>
+    </div>
+    
+    <form id="extractionForm">
+        <!-- Thickness Control -->
+        <div class="form-group">
+            <label for="thicknessInput">
+                Outline Thickness (pixels)
+                <span style="color: #7f8c8d; font-size: 14px; font-weight: normal;">
+                    - 1 pixel for pencil-like finish, up to 5 for bold lines
+                </span>
+            </label>
+            <div style="display: flex; align-items: center; gap: 15px;">
+                <input type="range" id="thicknessSlider" min="1" max="5" value="1" 
+                       style="flex: 1; height: 6px; cursor: pointer;">
+                <input type="number" id="thicknessInput" min="1" max="5" value="1" 
+                       style="width: 80px;" required>
+            </div>
+        </div>
+        
+        <!-- Output Format -->
+        <div class="form-group">
+            <label for="outputFormat">Output Format</label>
+            <select id="outputFormat">
+                <option value="png">PNG (Recommended for line art)</option>
+                <option value="jpg">JPG (Compressed)</option>
+                <option value="jpeg">JPEG (Compressed)</option>
+                <option value="bmp">BMP (Uncompressed)</option>
+                <option value="tiff">TIFF (High Quality)</option>
+                <option value="webp">WebP (Modern)</option>
+            </select>
+        </div>
+        
+        <!-- Info Box -->
+        <div style="background: #fff3cd; padding: 15px; border-radius: 6px; margin-top: 20px;">
+            <strong style="color: #856404;">💡 Extraction Tips:</strong>
+            <ul style="margin: 10px 0 0 20px; color: #856404; font-size: 14px; line-height: 1.8;">
+                <li>Images with clear contrast work best</li>
+                <li>Higher resolution images produce cleaner outlines</li>
+                <li>Thickness of 1 pixel gives a pencil-sketch effect</li>
+                <li>PNG format preserves line quality without compression</li>
+            </ul>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="action-buttons mt-3">
+            <button type="button" id="extractBtn" class="btn btn-primary">
+                🖊️ Extract Outline
+            </button>
+            <button type="button" id="resetBtn" class="btn btn-secondary">
+                🔄 Reset
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Preview Section -->
+<div id="previewSection" class="card hidden">
+    <div class="card-header">
+        <h2>Preview Results</h2>
+        <p style="color: #7f8c8d; margin-top: 10px;">
+            Compare original and outlined images side by side
+        </p>
+    </div>
+    
+    <!-- Zoom Controls -->
+    <div class="zoom-controls">
+        <label>🔍 Zoom:</label>
+        <input type="range" id="zoomSlider" class="zoom-slider" min="100" max="500" value="100" step="10">
+        <span id="zoomValue" class="zoom-value">100%</span>
+    </div>
+    
+    <!-- Preview Images -->
+    <div class="preview-images">
+        <div class="preview-item">
+            <div class="preview-label">Original</div>
+            <img id="originalPreview" src="" alt="Original Image">
+        </div>
+        
+        <div class="preview-item">
+            <div class="preview-label">Outlined</div>
+            <img id="outlinedPreview" src="" alt="Outlined Image">
+        </div>
+    </div>
+    
+    <!-- Quality Check Info -->
+    <div style="background: #f0f7ff; padding: 15px; border-radius: 6px; margin-top: 20px;">
+        <strong style="color: #4a90e2;">📊 Quality Check:</strong>
+        <p style="margin: 8px 0 0 0; color: #424242; font-size: 14px;">
+            Zoom in to verify that all important details have been captured in the outline.
+            The outline should be clean with black lines on a white background.
+        </p>
+    </div>
+    
+    <!-- Action Buttons -->
+    <div class="action-buttons mt-3">
+        <button type="button" id="downloadBtn" class="btn btn-success">
+            ⬇️ Download Outlined Image
+        </button>
+        <button type="button" id="resetBtn" class="btn btn-secondary">
+            🔄 Start Over
+        </button>
+    </div>
+</div>
+
+<!-- Feature Highlights -->
+<div class="card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); color: white;">
+    <h3 style="margin-bottom: 15px;">✨ Extraction Features</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div>
+            <strong>🎯 Precise Detection</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.95;">
+                Captures even the most minute lines and details
+            </p>
+        </div>
+        <div>
+            <strong>🖍️ Pencil-Like Finish</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.95;">
+                Adjustable thickness from 1-5 pixels for perfect results
+            </p>
+        </div>
+        <div>
+            <strong>⚫⚪ Clean Output</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.95;">
+                Black outlines on white background, ready to use
+            </p>
+        </div>
+        <div>
+            <strong>🔍 Quality Preview</strong>
+            <p style="margin: 5px 0 0 0; font-size: 14px; opacity: 0.95;">
+                Side-by-side comparison with zoom up to 500%
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Use Cases for Outlines -->
+<div class="card" style="margin-top: 30px;">
+    <div class="card-header">
+        <h2>🎨 Perfect For</h2>
+    </div>
+    
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 25px; margin-top: 20px;">
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h4 style="color: #4a90e2; margin-bottom: 10px;">🖍️ Coloring Pages</h4>
+            <p style="color: #7f8c8d; font-size: 14px; line-height: 1.6;">
+                Create professional coloring books and activity pages from any photo.
+                Perfect for kids' entertainment or adult relaxation coloring.
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h4 style="color: #50c878; margin-bottom: 10px;">🎨 Design Work</h4>
+            <p style="color: #7f8c8d; font-size: 14px; line-height: 1.6;">
+                Extract outlines for vector tracing, logo design, or illustration work.
+                Clean lines make it easy to digitize and modify.
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h4 style="color: #f39c12; margin-bottom: 10px;">📚 Educational Materials</h4>
+            <p style="color: #7f8c8d; font-size: 14px; line-height: 1.6;">
+                Create worksheets, teaching aids, and learning materials.
+                Turn complex images into simple, traceable outlines.
+            </p>
+        </div>
+        
+        <div style="background: #f8f9fa; padding: 20px; border-radius: 8px;">
+            <h4 style="color: #e74c3c; margin-bottom: 10px;">🖼️ Art Projects</h4>
+            <p style="color: #7f8c8d; font-size: 14px; line-height: 1.6;">
+                Convert photos to line art for painting, embroidery, or craft projects.
+                Great for mixed media and creative applications.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- Technical Info -->
+<div class="card" style="margin-top: 30px; background: #f8f9fa;">
+    <h3 style="color: #2c3e50; margin-bottom: 15px;">⚙️ Technical Details</h3>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px;">
+        <div>
+            <strong style="color: #4a90e2;">Algorithm:</strong>
+            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;">
+                Advanced Canny edge detection with adaptive thresholding
+            </p>
+        </div>
+        <div>
+            <strong style="color: #50c878;">Output:</strong>
+            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;">
+                Pure black (#000000) outlines on pure white (#FFFFFF) background
+            </p>
+        </div>
+        <div>
+            <strong style="color: #f39c12;">Processing:</strong>
+            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;">
+                Maintains original image dimensions and resolution
+            </p>
+        </div>
+        <div>
+            <strong style="color: #e74c3c;">Quality:</strong>
+            <p style="margin: 5px 0 0 0; color: #7f8c8d; font-size: 14px;">
+                Captures fine details including hair strands and texture
+            </p>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/outliner.js') }}"></script>
+<script>
+    // Sync thickness slider and input
+    const thicknessSlider = document.getElementById('thicknessSlider');
+    const thicknessInput = document.getElementById('thicknessInput');
+    
+    if (thicknessSlider && thicknessInput) {
+        thicknessSlider.addEventListener('input', function() {
+            thicknessInput.value = this.value;
+        });
+        
+        thicknessInput.addEventListener('input', function() {
+            const value = Math.max(1, Math.min(5, parseInt(this.value) || 1));
+            this.value = value;
+            thicknessSlider.value = value;
+        });
+    }
+</script>
+{% endblock %}

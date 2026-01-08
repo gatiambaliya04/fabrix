@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Professional image enhancement and outline extraction tool powered by AI">
+    <meta name="keywords" content="image enhancement, ESRGAN, outline extraction, image upscaling">
+    <meta name="author" content="Image Enhancer">
+    
+    <title>{% block title %}Image Enhancer & Outliner{% endblock %}</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}">
+    
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Additional CSS -->
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <h1>🖼️ Image Enhancer</h1>
+            <nav>
+                <a href="{{ url_for('index') }}" {% if request.endpoint == 'index' %}class="active"{% endif %}>
+                    Home
+                </a>
+                <a href="{{ url_for('enhancer') }}" {% if request.endpoint == 'enhancer' %}class="active"{% endif %}>
+                    Enhancer
+                </a>
+                <a href="{{ url_for('outliner') }}" {% if request.endpoint == 'outliner' %}class="active"{% endif %}>
+                    Outliner
+                </a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container">
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer style="margin-top: 60px; padding: 30px 0; background: #2c3e50; color: white; text-align: center;">
+        <div class="container">
+            <p>&copy; 2024 Image Enhancer & Outliner. All rights reserved.</p>
+            <p style="margin-top: 10px; font-size: 14px; color: #95a5a6;">
+                Powered by Real-ESRGAN for image enhancement
+            </p>
+        </div>
+    </footer>
+
+    <!-- Utility JavaScript -->
+    <script src="{{ url_for('static', filename='js/utils.js') }}"></script>
+    
+    <!-- Page-specific JavaScript -->
+    {% block extra_js %}{% endblock %}
+    
+    <!-- Global JavaScript -->
+    <script>
+        // Global error handler
+        window.addEventListener('error', function(e) {
+            console.error('Global error:', e.error);
+        });
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', function(e) {
+            console.error('Unhandled promise rejection:', e.reason);
+        });
+
+        // Prevent accidental navigation away when processing
+        let isProcessing = false;
+        
+        window.addEventListener('beforeunload', function(e) {
+            if (isProcessing) {
+                e.preventDefault();
+                e.returnValue = 'Processing is in progress. Are you sure you want to leave?';
+                return e.returnValue;
+            }
+        });
+
+        // Set processing state (can be called from page scripts)
+        function setProcessing(state) {
+            isProcessing = state;
+        }
+    </script>
+</body>
+</html>
